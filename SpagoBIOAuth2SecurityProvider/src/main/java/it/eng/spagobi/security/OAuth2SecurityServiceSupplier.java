@@ -11,12 +11,6 @@ import it.eng.spagobi.security.oauth2.OAuth2Config;
 import it.eng.spagobi.services.security.bo.SpagoBIUserProfile;
 import it.eng.spagobi.services.security.service.ISecurityServiceSupplier;
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -24,6 +18,11 @@ import org.apache.log4j.LogMF;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * @author Alessandro Daniele (alessandro.daniele@eng.it)
@@ -46,6 +45,8 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 
 			// We call the OAuth2 provider to get user's info
 			GetMethod httpget = new GetMethod(config.getProperty("USER_INFO_URL") + "?access_token=" + userUniqueIdentifier);
+			final String authorizationType = config.getProperty("USER_INFO_AUTHORIZATION_TYPE", "Bearer");
+			httpget.setRequestHeader("Authorization", authorizationType+ " " + userUniqueIdentifier);
 			int statusCode = httpClient.executeMethod(httpget);
 			byte[] response = httpget.getResponseBody();
 			if (statusCode != HttpStatus.SC_OK) {
@@ -57,10 +58,14 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 			String responseStr = new String(response);
 			LogMF.debug(logger, "Server response is:\n{0}", responseStr);
 			JSONObject jsonObject = new JSONObject(responseStr);
-
-			String userId = jsonObject.getString("id");
+			final String userIdKey = config.getProperty("USER_INFO_ID_KEY", "id");
+			logger.debug("User id key is [" + userIdKey + "]");
+			String userId = jsonObject.getString(userIdKey);
 			logger.debug("User id is [" + userId + "]");
-			String userName = jsonObject.getString("displayName");
+
+			final String userNameKey = config.getProperty("USER_INFO_NAME_KEY", "displayName");
+			logger.debug("User name key is [" + userNameKey + "]");
+			String userName = jsonObject.getString(userNameKey);
 			logger.debug("User name is [" + userName + "]");
 
 			profile = new SpagoBIUserProfile();
@@ -74,19 +79,34 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 			 * superadmin
 			 */
 			String adminEmail = config.getProperty("ADMIN_EMAIL");
-			String email = jsonObject.getString("email");
+			final String emailKey = config.getProperty("USER_INFO_EMAIL_KEY", "email");
+			logger.debug("User email key is [" + emailKey + "]");
+			String email = jsonObject.getString(emailKey);
 			profile.setIsSuperadmin(email.equalsIgnoreCase(adminEmail));
 
-			JSONArray jsonRolesArray = jsonObject.getJSONArray("roles");
+			final String rolesKey = config.getProperty("USER_INFO_ROLES_KEY", "roles");
+			logger.debug("User roles key is [" + rolesKey + "]");
+
+			final boolean parseRoles = config.getProperty("USER_INFO_PARSE_ROLES", "FALSE").equalsIgnoreCase("true");
+			final String rolesDelimiter = config.getProperty("USER_INFO_ROLES_DELIMITER", ",");
 			List<String> roles = new ArrayList<String>();
+			if (parseRoles) {
+				for(String role : jsonObject.getString(rolesKey).split(rolesDelimiter)) {
+					if (!role.isEmpty()) {
+						roles.add(role);
+					}
+				}
+			} else {
+				final JSONArray jsonRolesArray = jsonObject.getJSONArray(rolesKey);
+				for (int i = 0; i < jsonRolesArray.length(); i++) {
+					final String name = jsonRolesArray.getJSONObject(i).getString("name");
+					if (!name.equalsIgnoreCase("provider") && !name.equalsIgnoreCase("purchaser"))
+						roles.add(name);
+				}
+			}
+
 
 			// Read roles
-			String name;
-			for (int i = 0; i < jsonRolesArray.length(); i++) {
-				name = jsonRolesArray.getJSONObject(i).getString("name");
-				if (!name.equalsIgnoreCase("provider") && !name.equalsIgnoreCase("purchaser"))
-					roles.add(name);
-			}
 
 			// If no roles were found, search for roles in the organizations
 			if (roles.size() == 0 && !jsonObject.isNull("organizations")) {
@@ -96,11 +116,11 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 					// For each organization
 					for (int i = 0; i < organizations.length() && roles.size() == 0; i++) {
 						String organizationName = organizations.getJSONObject(i).getString("name");
-						jsonRolesArray = organizations.getJSONObject(i).getJSONArray("roles");
+						final JSONArray jsonRolesArray = organizations.getJSONObject(i).getJSONArray("roles");
 
 						// For each role in the current organization
 						for (int k = 0; k < jsonRolesArray.length(); k++) {
-							name = jsonRolesArray.getJSONObject(k).getString("name");
+							final String name = jsonRolesArray.getJSONObject(k).getString("name");
 
 							if (!name.equalsIgnoreCase("provider") && !name.equalsIgnoreCase("purchaser")) {
 								profile.setOrganization(organizationName);

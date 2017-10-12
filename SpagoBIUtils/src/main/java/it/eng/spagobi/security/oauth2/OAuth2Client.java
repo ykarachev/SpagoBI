@@ -6,10 +6,6 @@
 package it.eng.spagobi.security.oauth2;
 
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
-
-import java.io.IOException;
-import java.util.Properties;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
@@ -20,8 +16,18 @@ import org.apache.log4j.LogMF;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import sun.misc.BASE64Encoder;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Properties;
 
 public class OAuth2Client {
 	private static Logger logger = Logger.getLogger(OAuth2Client.class);
@@ -84,12 +90,41 @@ public class OAuth2Client {
 		return getToken(adminId, adminPassword);
 	}
 
+	private static class DefaultTrustManager implements X509TrustManager{
+
+		@Override
+		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return null;
+		}
+	}
+
+	private void trustAllSSLCertificates() {
+		try {
+			SSLContext ctx = SSLContext.getInstance("TLS");
+			ctx.init(new KeyManager[0], new TrustManager[] {new DefaultTrustManager()}, new SecureRandom());
+			SSLContext.setDefault(ctx);
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public HttpClient getHttpClient() {
 
 		String proxyUrl = System.getProperty("http.proxyHost");
 		String proxyPort = System.getProperty("http.proxyPort");
 		String proxyUser = System.getProperty("http.proxyUsername");
 		String proxyPassword = System.getProperty("http.proxyPassword");
+
+		String trustAllCerts = config.getProperty("TRUST_ALL_SSL_CERTIFICATES", "FALSE");
+		if (trustAllCerts.equalsIgnoreCase("TRUE")) {
+			this.trustAllSSLCertificates();
+		}
 
 		HttpClient client = new HttpClient();
 		if (proxyUrl != null && proxyPort != null) {

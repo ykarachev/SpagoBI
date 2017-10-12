@@ -5,9 +5,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package it.eng.spagobi.security.oauth2;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.Properties;
+import org.apache.log4j.Logger;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -18,8 +16,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.log4j.Logger;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.Properties;
 
 public class OAuth2Filter implements Filter {
 
@@ -39,8 +38,11 @@ public class OAuth2Filter implements Filter {
 			if (((HttpServletRequest) request).getParameter("code") == null) {
 				// We have to retrieve the Oauth2's code redirecting the browser to the OAuth2 provider
 				String url = oauth2Config.getProperty("AUTHORIZE_URL");
-				url += "?response_type=code&client_id=" + OAuth2Config.getInstance().getConfig().getProperty("CLIENT_ID");
+				url += "?response_type=code&scope=openid&client_id=" + oauth2Config.getProperty("CLIENT_ID");
 				url += "&redirect_uri=" + URLEncoder.encode(oauth2Config.getProperty("REDIRECT_URI"), "UTF-8");
+				if (oauth2Config.getProperty("SCOPE") != null) {
+					url += "&scope=" + oauth2Config.getProperty("SCOPE");
+				}
 				((HttpServletResponse) response).sendRedirect(url);
 			} else {
 				// Using the code we get the access token and put it in session
