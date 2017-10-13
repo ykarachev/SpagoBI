@@ -209,12 +209,18 @@ END-LIFERAY -->
         <servlet-name>AdapterHTTP</servlet-name>
         <servlet-class>it.eng.spago.dispatching.httpchannel.AdapterHTTP</servlet-class>
     </servlet>
-    
+
+    <servlet>
+        <servlet-name>ReindexServlet</servlet-name>
+        <servlet-class>it.eng.spago.dispatching.httpchannel.ReindexServlet</servlet-class>
+    </servlet>
+
+
 <!-- EXO
 <servlet>
 <servlet-name>PortletWrapper</servlet-name>
 <servlet-class>org.exoplatform.services.portletcontainer.impl.servlet.ServletWrapper</servlet-class>
-</servlet>  
+</servlet>
 EXO -->
 
 
@@ -277,6 +283,10 @@ END-LIFERAY -->
     <servlet-mapping>
         <servlet-name>AdapterHTTP</servlet-name>
         <url-pattern>/servlet/AdapterHTTP</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ReindexServlet</servlet-name>
+        <url-pattern>/servlet/reindex</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AxisServlet</servlet-name>

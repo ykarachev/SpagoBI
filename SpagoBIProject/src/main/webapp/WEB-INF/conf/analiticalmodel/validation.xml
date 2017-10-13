@@ -8,7 +8,7 @@
 				<FIELD name="label" label="#SBIDev.docConf.docDet.labelField">
 				    <VALIDATOR validatorName="MANDATORY"/>
 				    <VALIDATOR validatorName="ALFANUMERIC"/>
-					<VALIDATOR validatorName="MAXLENGTH" arg0="20"/>
+					<VALIDATOR validatorName="MAXLENGTH" arg0="100"/>
 				</FIELD>
 				<FIELD name="name" label="#SBIDev.docConf.docDet.nameField">
 				    <VALIDATOR validatorName="MANDATORY"/>
@@ -130,7 +130,7 @@
 				<FIELD name="label" label="#SBIDev.docConf.docDet.labelField">
 				    <VALIDATOR validatorName="MANDATORY"/>
 				    <VALIDATOR validatorName="ALFANUMERIC"/>
-					<VALIDATOR validatorName="MAXLENGTH" arg0="20"/>
+					<VALIDATOR validatorName="MAXLENGTH" arg0="100"/>
 				</FIELD>
 				<FIELD name="name" label="#SBIDev.docConf.docDet.nameField">
 				    <VALIDATOR validatorName="MANDATORY"/>
@@ -184,7 +184,7 @@
 				<FIELD name="label" label="#SBIDev.docConf.docDet.labelField">
 				    <VALIDATOR validatorName="MANDATORY"/>
 				    <VALIDATOR validatorName="ALFANUMERIC"/>
-					<VALIDATOR validatorName="MAXLENGTH" arg0="20"/>
+					<VALIDATOR validatorName="MAXLENGTH" arg0="100"/>
 				</FIELD>
 				<FIELD name="name" label="#SBIDev.docConf.docDet.nameField">
 				    <VALIDATOR validatorName="MANDATORY"/>
@@ -238,7 +238,7 @@
 				<FIELD name="label" label="#SBIDev.docConf.docDet.labelField">
 				    <VALIDATOR validatorName="MANDATORY"/>
 				    <VALIDATOR validatorName="ALFANUMERIC"/>
-					<VALIDATOR validatorName="MAXLENGTH" arg0="20"/>
+					<VALIDATOR validatorName="MAXLENGTH" arg0="100"/>
 				</FIELD>
 				<FIELD name="name" label="#SBIDev.docConf.docDet.nameField">
 				    <VALIDATOR validatorName="MANDATORY"/>

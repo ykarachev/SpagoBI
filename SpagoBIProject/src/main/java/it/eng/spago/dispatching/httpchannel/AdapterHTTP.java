@@ -6,6 +6,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 package it.eng.spago.dispatching.httpchannel;
 
+import com.jamonapi.Monitor;
+import com.jamonapi.MonitorFactory;
 import it.eng.spago.base.Constants;
 import it.eng.spago.base.RequestContainer;
 import it.eng.spago.base.ResponseContainer;
@@ -38,27 +40,22 @@ import it.eng.spago.presentation.rendering.RenderIFace;
 import it.eng.spago.presentation.rendering.RenderManager;
 import it.eng.spago.tracing.TracerSingleton;
 import it.eng.spago.util.Serializer;
-
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.StringTokenizer;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 
-import com.jamonapi.Monitor;
-import com.jamonapi.MonitorFactory;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class AdapterHTTP extends HttpServlet {
 
@@ -239,7 +236,6 @@ public class AdapterHTTP extends HttpServlet {
 
 		// upload.setFileSizeMax(5242880);
 		// upload.setSizeMax(5242880);
-
 		// Parse the request
 		List fileItems = upload.parseRequest(request);
 		Iterator iter = fileItems.iterator();
@@ -248,7 +244,7 @@ public class AdapterHTTP extends HttpServlet {
 
 			if (item.isFormField()) {
 				String name = item.getFieldName();
-				String value = item.getString();
+				String value = new String(item.getString().getBytes("ISO-8859-1"), "UTF-8");
 				serviceRequest.setAttribute(name, value);
 			} else {
 				processFileField(item, requestContext);

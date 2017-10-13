@@ -20,6 +20,9 @@ import it.eng.spago.util.ContextScooping;
 import it.eng.spago.validation.EMFValidationError;
 import it.eng.spago.validation.ValidationEngineIFace;
 import it.eng.spago.validation.impl.ValidatorLocator;
+import org.apache.commons.validator.GenericValidator;
+import org.apache.commons.validator.UrlValidator;
+import org.apache.log4j.Logger;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,10 +30,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.validator.GenericValidator;
-import org.apache.commons.validator.UrlValidator;
-import org.apache.log4j.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author zoppello
@@ -39,7 +40,7 @@ import org.apache.log4j.Logger;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class SpagoBIValidationImpl implements ValidationEngineIFace {
-	
+
 	static private Logger logger = Logger.getLogger(SpagoBIValidationImpl.class);
 
 	private String _serviceName = null;
@@ -67,35 +68,35 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 	public static final String ERROR_BOOLEAN="9014";
 	public static final String ERROR_XSS="9015";
 	public static final String ERROR_EXTENDED_ALFANUMERIC="9016";
-	
-	// Costanti per le espressioni regolari 
+
+	// Costanti per le espressioni regolari
 	private static final String LETTER_STRING_REGEXP= "^([a-zA-ZéèëïâêôûîçàùìòÀÉÎÕÜ])*$";
 	private static final String FISCAL_CODE_REGEXP="^([A-Z]{6}[A-Z\\d]{2}[A-Z][A-Z\\d]{2}[A-Z][A-Z\\d]{3}[A-Z])*$";
 	private static final String ALPHANUMERIC_EXTENDED_STRING_REGEXP="^([\\w\\s\\-\\_\\(\\)\\[\\]\\;\\:\\!\\?\\{\\,\\}\\.\\'\\\"\\x2F\\x5F])*$";
 	private static final String ALPHANUMERIC_EXTENDED_STRING_REGEXP_NOSPACE="^([\\w\\-\\_\\(\\)\\[\\]\\;\\:\\!\\?\\{\\,\\}\\.\\x2F\\x5F])*$";
-	private static final String ALPHANUMERIC_STRING_REGEXP="^([a-zA-Z0-9\\s\\-\\_])*$";
-	private static final String ALPHANUMERIC_STRING_REGEXP_NOSPACE="^([a-zA-Z0-9\\-\\_])*$";
-	
+	private static final String ALPHANUMERIC_STRING_REGEXP="^([\\w\\.\\d\\s\\-\\_])*$";
+	private static final String ALPHANUMERIC_STRING_REGEXP_NOSPACE="^([\\p{L}\\.0-9\\-\\_])*$";
+
 	/**
 	 * Thise methodis called everyTime a service with label <code>serviceName</code>
 	 * is called, if the service validator is configured correctly into the <code>validator.xml</code>
 	 * configuration file. It starts the validation procedure.
 	 */
 	public SpagoBIValidationImpl() {
-		
+
 	}
-	
+
 	/**
 	 * From the request and response container this method controls if validation conditions
 	 * declarated into the <code>validator.xml>/code> file are verifyed, and, if yes, acknowledge
 	 * to start validation control.
-	 * 
+	 *
 	 * @param serviceType the service type
 	 * @param serviceName the service name
 	 * @param context the context
-	 * 
+	 *
 	 * @return a boolean value which says if conditions are verified.
-	 * 
+	 *
 	 * @throws Exception if an exception occurs.
 	 */
 	public boolean validate(String serviceType, String serviceName, RequestContextIFace context)  {
@@ -104,15 +105,15 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		_serviceName = serviceName;
 		_serviceType = serviceType;
 		ConfigSingleton config = ConfigSingleton.getInstance();
-		
+
 		Object objServices = config.getFilteredSourceBeanAttribute(
 				ValidatorLocator.VALIDATION_CONFIG_HEADER,
 				ValidatorLocator.VALIDATION_SERVICE_NAME, _serviceName);
-		
+
 		if (objServices instanceof SourceBean)
 			_serviceValidations = (SourceBean) objServices;
-		
-		
+
+
 		else if (objServices instanceof List) {
 			for (int i = 0; i < ((List) objServices).size(); i++) {
 				SourceBean tmp = (SourceBean) (((List) objServices).get(i));
@@ -122,7 +123,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 				break;
 			}
 		}
-		
+
 		if (_serviceValidations == null){
 			TracerSingleton.log(Constants.NOME_MODULO,
 				TracerSingleton.INFORMATION,
@@ -130,7 +131,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 									+ _serviceName + " di tipo " + _serviceType + " trovata nel file di Configurazione");
 			return true;
 		}
-		
+
 //		if (_serviceValidations == null
 //				|| !((String) _serviceValidations.getAttribute("TYPE"))
 //						.equalsIgnoreCase(_serviceType)) {
@@ -175,7 +176,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 //			}
 //			
 //		}
-		
+
 		// Nello stesso elemento service ci possono essere piï¿½ buste validation
 		// dipendenti dalle condizioni
 		// Viene eseguita una sola
@@ -190,7 +191,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 									+ _serviceName);
 			return true;
 		}
-		
+
 		SourceBean validation = null;
 		List conditions = null;
 		for (int i = 0; i < validations.size(); i++) {
@@ -251,12 +252,12 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		return validateService(requestContainer, responseContainer);
 	}
 
-	
-	
+
+
 	/**
 	 * A method which says if a validator has blocking properties. If a validator is blocking
 	 * and his validation is not passed, all execution will be interrupted.
-	 * 
+	 *
 	 * @return A boolean value saying if validator is blocking or not.
 	 */
 	public boolean isBlocking() {
@@ -268,9 +269,9 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 	}
 
 	/**
-	 * When the validation is started, if a control has generated errors, this method interrupts 
+	 * When the validation is started, if a control has generated errors, this method interrupts
 	 * validation without going on with other controls.
-	 * 
+	 *
 	 * @param requestContainer The input request container
 	 * @param responseContainer The input response container
 	 * @return A boolean value saying if we have errors or not
@@ -280,7 +281,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		ResponseContainer responseContainer)  {
 
 		SessionContainer sessionContainer = requestContainer
-				.getSessionContainer();	
+				.getSessionContainer();
 		SourceBean serviceRequest = requestContainer.getServiceRequest();
 		ValidatorLocator locator = ValidatorLocator.getInstance();
 		EMFErrorHandler errorHandler = responseContainer.getErrorHandler();
@@ -300,9 +301,9 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		 * For each input field type (Numeric, URL, extc:), this method applies validation.
 		 * Every time a validation fails, an error is added to the <code>errorHandler</code>
 		 * errors stack.
-		 * 
+		 *
 		 * @param serviceRequest The request Source Bean
-		 * @param errorHandler The errors Stack 
+		 * @param errorHandler The errors Stack
 		 * @throws Exception If any exception occurs.
 		 */
 	private void automaticValidation(SourceBean serviceRequest,
@@ -313,10 +314,10 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		List fields = _validationStructure.getAttributeAsList("FIELDS.FIELD");
 
 		for (Iterator iter = fields.iterator(); iter.hasNext();) {
-			
+
 			Object valueObj = null;
 			String value = null;
-			
+
 			List validators = null;
 			SourceBean currentValidator = null;
 			String validatorName = null;
@@ -325,14 +326,14 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 				SourceBean field = (SourceBean) iter.next();
 
 				String fieldName = (String) field.getAttribute("name");
-				
+
 				String fieldLabel = (String) field.getAttribute("label");
-				
+
 				String multivaluesStr = (String) field.getAttribute("multivalues");
 				boolean multivalues = (multivaluesStr != null && multivaluesStr.equalsIgnoreCase("true"))? true: false;
 				String separator = null;
 				if(multivalues) separator = (String) field.getAttribute("separator");
-				
+
 				// ********************************************
 				if (fieldLabel != null && fieldLabel.startsWith("#")) {
 					String key = fieldLabel.substring(1);
@@ -346,24 +347,26 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 					if (fieldDescription != null && !fieldDescription.trim().equals("")) fieldLabel = fieldDescription;
 				}
 				//********************************************
-				
-				if((fieldLabel==null) || (fieldLabel.trim().equals(""))) 
+
+				if((fieldLabel==null) || (fieldLabel.trim().equals("")))
 						fieldLabel = fieldName;
-				
+
 				valueObj = serviceRequest.getAttribute(fieldName);
-				if (valueObj != null) value = valueObj.toString();
+				if (valueObj != null) {
+					value = valueObj.toString();
+				}
 				String[] values = null;
 				if(multivalues) values = value.split(separator);
 				else values = new String[]{value};
-				
+
 				validators = field.getAttributeAsList("VALIDATOR");
-				
+
 				for(int i = 0; i < values.length; i++ ) {
-					
+
 					value = values[i];
-					
+
 					itValidators = validators.iterator();
-					
+
 					while (itValidators.hasNext()){
 						currentValidator = (SourceBean)itValidators.next();
 						validatorName = (String) currentValidator.getAttribute("validatorName");
@@ -373,8 +376,8 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 						EMFValidationError error = validateField(fieldName, fieldLabel, value, validatorName, arg0, arg1, arg2);
 						errorHandler.addError(error);
 					}//while (itValidators.hasNext())
-				} // while 
-				
+				} // while
+
 			} catch (Exception ex) {
 				TracerSingleton.log(Constants.NOME_MODULO,
 						TracerSingleton.INFORMATION,
@@ -385,18 +388,18 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		}
 	}
 
-	public static EMFValidationError validateField(String fieldName, String fieldLabel, String value, 
+	public static EMFValidationError validateField(String fieldName, String fieldLabel, String value,
 			String validatorName, String arg0, String arg1, String arg2) throws Exception {
-		
+
 		List params = null;
-		
+
 		if (validatorName.equalsIgnoreCase("MANDATORY")){
 			logger.debug( "Apply the MANDATORY VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			if (GenericValidator.isBlankOrNull(value)){
 				params = new ArrayList();
 				params.add(fieldLabel);
-				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_MANDATORY, params);	
-				
+				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_MANDATORY, params);
+
 			}
 
 		} else if (validatorName.equalsIgnoreCase("URL")){
@@ -406,7 +409,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_URL,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("LETTERSTRING")){
 			logger.debug("Apply the LETTERSTRING VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
@@ -414,73 +417,75 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_LETTERSTRING,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("ALFANUMERIC")){
 			logger.debug( "Apply the ALFANUMERIC VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
-			if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.matchRegexp(value, ALPHANUMERIC_STRING_REGEXP)){
-			
+			final Pattern pattern = Pattern.compile(ALPHANUMERIC_STRING_REGEXP, Pattern.UNICODE_CHARACTER_CLASS);
+			final Matcher matcher = pattern.matcher(value);
+
+			if (!GenericValidator.isBlankOrNull(value) && !matchRegexp(value, ALPHANUMERIC_STRING_REGEXP)){
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_ALFANUMERIC,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("EXTENDED_ALFANUMERIC")){
 			logger.debug( "Apply the ALFANUMERIC VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.matchRegexp(value, ALPHANUMERIC_EXTENDED_STRING_REGEXP)){
-			
+
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_EXTENDED_ALFANUMERIC,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("NUMERIC")){
 			logger.debug( "Apply the NUMERIC VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
-			if (!GenericValidator.isBlankOrNull(value) && 
-	            (!(GenericValidator.isInt(value) 
-				|| GenericValidator.isFloat(value) 
+			if (!GenericValidator.isBlankOrNull(value) &&
+	            (!(GenericValidator.isInt(value)
+				|| GenericValidator.isFloat(value)
 				|| GenericValidator.isDouble(value)
 				|| GenericValidator.isShort(value)
 				|| GenericValidator.isLong(value)))){
-				
+
 				// The string is not a integer, not a float, not double, not short, not long
 				// so is not a number
-				
+
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_NUMERIC,params);
-				
+
 			}
-			
+
 		} else if (validatorName.equalsIgnoreCase("EMAIL")){
 			logger.debug( "Apply the EMAIL VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.isEmail(value)){
-				
+
 				// Generate errors
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_EMAIL,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("BOOLEAN")){
 			logger.debug( "Apply the MANDATORY VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			if (!GenericValidator.isBlankOrNull(value) && !value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")){
 				params = new ArrayList();
 				params.add(fieldLabel);
-				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_BOOLEAN, params);	
-				
+				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_BOOLEAN, params);
+
 			}
 
-		} 
+		}
 		else if (validatorName.equalsIgnoreCase("FISCALCODE")){
 			logger.debug( "Apply the FISCALCODE VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.matchRegexp(value, FISCAL_CODE_REGEXP)){
-				
+
 //				 Generate errors
 				params = new ArrayList();
 				params.add(fieldLabel);
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_FISCALCODE,params);
-				
+
 			}
 		} else if (validatorName.equalsIgnoreCase("DECIMALS")){
 			if (!GenericValidator.isBlankOrNull(value)) {
@@ -536,20 +541,20 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 					double secondValue = Double.valueOf(secondValueStr).doubleValue();
 					double valueToCheckDouble = Double.valueOf(value).doubleValue();
 					if (!(GenericValidator.isInRange(valueToCheckDouble, firstValue, secondValue))){
-				
+
 						params = new ArrayList();
 						params.add(fieldLabel);
 						params.add(firstValueStr);
 						params.add(secondValueStr);
 						return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_RANGE,params);
-				
+
 					}
 				}else{
 					return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_GENERIC);
 				}
 			}
 		} else if (validatorName.equalsIgnoreCase("DATERANGE")){
-			
+
 			if (!GenericValidator.isBlankOrNull(value)) {
 			logger.debug("Apply the DATERANGE VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			String firstValueStr = arg0;
@@ -559,7 +564,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 			logger.debug( "Date Format is  ["+dateFormat+"]");
 //			//boolean syntaxCorrect = false;
 			boolean syntaxCorrect = true;
-			
+
 			//if (!GenericValidator.isDate(value,dateFormat,true)){
 			if (!GenericValidator.isDate(value,dateFormat,true)){
 				logger.debug( " CANNOT APPLY THE DATERANGE VALIDATOR  value ["+value+"] is not a is not valid Date according to ["+dateFormat+"]");
@@ -575,15 +580,15 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 				logger.debug( " CANNOT APPLY THE DATERANGE VALIDATOR  second value of range ["+secondValueStr+"] is not a valid Date according to ["+dateFormat+"]");
 				syntaxCorrect = false;
 			}
-			
-			
+
+
 			if (syntaxCorrect){
 				DateFormat df = new SimpleDateFormat(dateFormat);
-			
+
 				Date firstValueDate = df.parse(firstValueStr);
 				Date secondValueDate = df.parse(secondValueStr);
 				Date theValueDate = df.parse(value);
-			
+
 				if ((theValueDate.getTime() < firstValueDate.getTime()) || (theValueDate.getTime() > secondValueDate.getTime())){
 					params = new ArrayList();
 					params.add(fieldLabel);
@@ -598,7 +603,7 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 		} else if (validatorName.equalsIgnoreCase("STRINGRANGE")){
 			if (!GenericValidator.isBlankOrNull(value)) {
 			logger.debug("Apply the STRINGRANGE VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
-			
+
 			String firstValueStr = arg0;
 			String secondValueStr = arg1;
 			logger.debug( "Range is ["+firstValueStr+"< x <"+secondValueStr+"]");
@@ -617,13 +622,13 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 			int maxLength = Integer.valueOf(arg0).intValue();
 			logger.debug( "maxLength is ["+maxLength+"]");
 			if (!GenericValidator.maxLength(value, maxLength)){
-				
+
 				params = new ArrayList();
 				params.add(fieldLabel);
 				params.add(String.valueOf(maxLength));
-				
+
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_MAXLENGTH,params);
-			
+
 			}
 			}
 		} else if (validatorName.equalsIgnoreCase("MINLENGTH")){
@@ -632,14 +637,14 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 			int minLength = Integer.valueOf(arg0).intValue();
 			logger.debug( "minLength is ["+minLength+"]");
 			if (!GenericValidator.minLength(value, minLength)){
-				
+
 				// Generate Errors
 				params = new ArrayList();
 				params.add(fieldLabel);
 				params.add(String.valueOf(minLength));
-				
+
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_MINLENGTH,params);
-			
+
 			}
 			}
 		} else if (validatorName.equalsIgnoreCase("REGEXP")){
@@ -648,14 +653,14 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 			String regexp  = arg0;
 			logger.debug( "regexp is ["+regexp+"]");
 			if (!(GenericValidator.matchRegexp(value, regexp))){
-				
+
 				// Generate Errors
 				params = new ArrayList();
 				params.add(fieldLabel);
 				params.add(regexp);
-				
+
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_REGEXP,params);
-			
+
 			}
 			}
 		}  else if (validatorName.equalsIgnoreCase("XSS")){
@@ -668,35 +673,45 @@ public class SpagoBIValidationImpl implements ValidationEngineIFace {
 					// Generate Errors
 					params = new ArrayList();
 					params.add(fieldLabel);
-					
+
 					return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_XSS,params);
-				
+
 				}
 				}
 		}else if (validatorName.equalsIgnoreCase("DATE")){
-			
+
 			if (!GenericValidator.isBlankOrNull(value)) {
 			logger.debug( "Apply the DATE VALIDATOR to field ["+fieldName+"] with value ["+value+"]");
 			String dateFormat = arg0;
 			logger.debug("dateFormat is ["+dateFormat+"]");
 			//if (!GenericValidator.isDate(value, dateFormat, true)){
 			if (!GenericValidator.isDate(value, dateFormat, true)){
-	
+
 				//Generate Errors
 				params = new ArrayList();
 				params.add(fieldLabel);
 				params.add(dateFormat);
-				
+
 				return new EMFValidationError(EMFErrorSeverity.ERROR, fieldName, ERROR_DATE,params);
 			}
 			}
-			
+
 		}
-		
+
 		// all checks had positive result (no errors)
 		return null;
 	}
-	
+
+    public static boolean matchRegexp(String value, String regexp) {
+        if (regexp == null || regexp.length() <= 0) {
+            return false;
+        }
+
+        final Pattern p = Pattern.compile(regexp, Pattern.UNICODE_CHARACTER_CLASS);
+        final Matcher m = p.matcher(value);
+        return m.matches();
+    }
+
 }
 
 
