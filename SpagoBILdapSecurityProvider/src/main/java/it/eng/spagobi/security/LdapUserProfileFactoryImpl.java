@@ -61,7 +61,7 @@ public class LdapUserProfileFactoryImpl implements ISecurityServiceSupplier {
 
 
 
-    public SpagoBIUserProfile createUserProfile(String username) {
+    public SpagoBIUserProfile createUserProfile(String username, String remoteAddr) {
 		
     	logger.debug("IN");
   

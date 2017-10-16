@@ -42,11 +42,12 @@ public class LiferaySecurityServiceSupplierImpl implements ISecurityServiceSuppl
 	 * 
 	 * @param userId
 	 *            the user id
-	 * 
-	 * @return The User Profile Interface implementation object
+	 *
+	 * @param remoteAddr
+     * @return The User Profile Interface implementation object
 	 */
 
-	public SpagoBIUserProfile createUserProfile(String userId) {
+	public SpagoBIUserProfile createUserProfile(String userId, String remoteAddr) {
 		logger.debug("IN,userId="+userId);
 		SpagoBIUserProfile profile = new SpagoBIUserProfile();
 		profile.setUniqueIdentifier(userId);

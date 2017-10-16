@@ -21,8 +21,8 @@ import it.eng.spagobi.services.security.service.ISecurityServiceSupplier;
 import it.eng.spagobi.services.security.service.SecurityServiceSupplierFactory;
 import it.eng.spagobi.tenant.Tenant;
 import it.eng.spagobi.tenant.TenantManager;
-
-import java.io.IOException;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.log4j.Logger;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -32,9 +32,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.log4j.Logger;
+import java.io.IOException;
 
 /**
  * @author Zerbetto (davide.zerbetto@eng.it)
@@ -96,7 +94,7 @@ public class ProfileFilter implements Filter {
 
 					logger.debug("User id = " + userId);
 					if (userId != null && !userId.trim().equals("")) {
-						profile = GeneralUtilities.createNewUserProfile(userId);
+						profile = GeneralUtilities.createNewUserProfile(userId, httpRequest.getRemoteAddr());
 						permanentSession.setAttribute(IEngUserProfile.ENG_USER_PROFILE, profile);
 						session.setAttribute(IEngUserProfile.ENG_USER_PROFILE, profile);
 					} else {
@@ -220,7 +218,7 @@ public class ProfileFilter implements Filter {
 	 * Finds the user identifier from http request or from SSO system (by the http request in input). Use the SsoServiceInterface for read the userId in all
 	 * cases, if SSO is disabled use FakeSsoService. Check spagobi_sso.xml
 	 *
-	 * @param httpRequest
+	 * @param request
 	 *            The http request
 	 *
 	 * @return the current user unique identified

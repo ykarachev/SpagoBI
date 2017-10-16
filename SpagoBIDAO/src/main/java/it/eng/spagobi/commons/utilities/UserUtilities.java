@@ -5,20 +5,6 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package it.eng.spagobi.commons.utilities;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.log4j.Logger;
-
 import it.eng.spago.base.RequestContainer;
 import it.eng.spago.base.SessionContainer;
 import it.eng.spago.error.EMFInternalError;
@@ -41,6 +27,18 @@ import it.eng.spagobi.services.security.exceptions.SecurityException;
 import it.eng.spagobi.services.security.service.ISecurityServiceSupplier;
 import it.eng.spagobi.utilities.assertion.Assert;
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
+import org.apache.log4j.Logger;
+
+import javax.portlet.PortletRequest;
+import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 public class UserUtilities {
 
@@ -133,15 +131,18 @@ public class UserUtilities {
 			logger.debug("OUT");
 		}
 	}
-
 	public static IEngUserProfile getUserProfile(String userId) throws Exception {
+		return getUserProfile(userId, null);
+	}
+
+	public static IEngUserProfile getUserProfile(String userId, String remoteAddr) throws Exception {
 		logger.debug("IN.userId=" + userId);
 		if (userId == null)
 			return null;
 		ISecurityServiceSupplier supplier = createISecurityServiceSupplier();
 
 		try {
-			SpagoBIUserProfile user = supplier.createUserProfile(userId);
+			SpagoBIUserProfile user = supplier.createUserProfile(userId, remoteAddr);
 			if (user == null)
 				return null;
 			checkTenant(user);

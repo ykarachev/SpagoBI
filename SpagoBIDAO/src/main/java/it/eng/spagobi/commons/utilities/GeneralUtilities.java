@@ -27,6 +27,9 @@ import it.eng.spagobi.services.common.SsoServiceInterface;
 import it.eng.spagobi.utilities.assertion.Assert;
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
 import it.eng.spagobi.utilities.file.FileUtils;
+import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -41,10 +44,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Contains some SpagoBI's general utilities.
@@ -264,6 +263,10 @@ public class GeneralUtilities extends SpagoBIUtilities{
 	 */
 	public static IEngUserProfile createNewUserProfile(String userId) throws Exception {
 		return UserUtilities.getUserProfile(userId);
+	}
+
+	public static IEngUserProfile createNewUserProfile(String userId, String remoteAddr) throws Exception {
+		return UserUtilities.getUserProfile(userId, remoteAddr);
 	}
 
 

@@ -14,13 +14,17 @@ import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.net.util.SubnetUtils;
 import org.apache.log4j.LogMF;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -32,7 +36,7 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 	static private Logger logger = Logger.getLogger(OAuth2SecurityServiceSupplier.class);
 
 	@Override
-	public SpagoBIUserProfile createUserProfile(String userUniqueIdentifier) {
+	public SpagoBIUserProfile createUserProfile(String userUniqueIdentifier, String remoteAddr) {
 		logger.debug("IN");
 
 		SpagoBIUserProfile profile;
@@ -105,7 +109,6 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 				}
 			}
 
-
 			// Read roles
 
 			// If no roles were found, search for roles in the organizations
@@ -131,6 +134,23 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 				}
 			}
 
+
+			final String allowedIp = config.getProperty("ALLOWED_IP");
+			if (allowedIp != null) {
+				final List<String> ipRanges = Arrays.asList(StringUtils.split(allowedIp, ","));
+				checkIPRange(remoteAddr, userName, ipRanges);
+			}
+
+			final String allowedIpKey = config.getProperty("USER_INFO_ALLOWED_IP_KEY");
+			if (allowedIpKey != null) {
+				try {
+					List<String> ipRanges = Arrays.asList(StringUtils.split(jsonObject.getString(allowedIpKey), ","));
+					checkIPRange(remoteAddr, userName, ipRanges);
+				} catch (Exception e) {
+					// NO-OP
+				}
+			}
+
 			if (roles.size() == 0) { // Add the default role
 				roles.add(SingletonConfig.getInstance().getConfigValue("SPAGOBI.SECURITY.DEFAULT_ROLE_ON_SIGNUP"));
 			}
@@ -153,10 +173,30 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 		}
 	}
 
+	private void checkIPRange(String remoteAddr, String userName, Iterable<String> ipRanges) {
+		boolean ipCheckSuccess = false;
+		Iterator<String> iterator = ipRanges.iterator();
+		while(iterator.hasNext() && !ipCheckSuccess) {
+			final String ipRange = iterator.next();
+			try {
+				final SubnetUtils utils = new SubnetUtils(ipRange);
+				utils.setInclusiveHostCount(true);
+				ipCheckSuccess |= utils.getInfo().isInRange(remoteAddr);
+			} catch (Exception e) {
+				logger.warn("Error", e);
+			}
+		}
+
+		if (!ipCheckSuccess) {
+			logger.warn("Login '" + userName + "' from '" + remoteAddr + "' is not allowed");
+			throw new RuntimeException("Invalid remote address");
+		}
+	}
+
 	@Override
 	public SpagoBIUserProfile checkAuthentication(String userId, String psw) {
 		OAuth2Client oauth2Client = new OAuth2Client();
-		return createUserProfile(oauth2Client.getAccessToken(userId, psw));
+		return createUserProfile(oauth2Client.getAccessToken(userId, psw), null);
 	}
 
 	@Override

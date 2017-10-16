@@ -23,7 +23,7 @@ public interface ISecurityServiceSupplier {
      * 
      * @return SpagoBIUserProfile
      */
-	SpagoBIUserProfile createUserProfile(String userId);
+	SpagoBIUserProfile createUserProfile(String userId, String remoteAddr);
 	
 	/**
      * if SpagoBIUserProfile is NULL the password is incorrect!!!!

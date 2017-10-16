@@ -99,7 +99,7 @@ public class InternalSecurityServiceSupplierImpl implements
 		return false;
 	}
 
-	public SpagoBIUserProfile createUserProfile(String userId) {
+	public SpagoBIUserProfile createUserProfile(String userId, String remoteAddr) {
 		logger.debug("IN - userId: " + userId);
 		SpagoBIUserProfile profile = null;
 		try {

@@ -11,11 +11,6 @@ import it.eng.spagobi.commons.metadata.SbiTenant;
 import it.eng.spagobi.security.oauth2.OAuth2Client;
 import it.eng.spagobi.security.oauth2.OAuth2Config;
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -24,6 +19,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * @author Alessandro Daniele (alessandro.daniele@eng.it)

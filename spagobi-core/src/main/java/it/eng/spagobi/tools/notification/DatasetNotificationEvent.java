@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 package it.eng.spagobi.tools.notification;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,10 +44,6 @@ import it.eng.spagobi.analiticalmodel.document.bo.BIObject;
 import it.eng.spagobi.analiticalmodel.document.bo.ObjTemplate;
 import it.eng.spagobi.analiticalmodel.document.dao.IBIObjectDAO;
 import it.eng.spagobi.commons.dao.DAOFactory;
-import it.eng.spagobi.profiling.bean.SbiAttribute;
-import it.eng.spagobi.profiling.bean.SbiUser;
-import it.eng.spagobi.profiling.bean.SbiUserAttributes;
-import it.eng.spagobi.profiling.dao.ISbiUserDAO;
 import it.eng.spagobi.services.security.bo.SpagoBIUserProfile;
 import it.eng.spagobi.services.security.service.ISecurityServiceSupplier;
 import it.eng.spagobi.services.security.service.SecurityServiceSupplierFactory;
@@ -119,7 +114,7 @@ public class DatasetNotificationEvent extends AbstractEvent {
 								String documentCreationUser = sbiDocument.getCreationUser();
 								
 								ISecurityServiceSupplier supplier = SecurityServiceSupplierFactory.createISecurityServiceSupplier();
-								SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser);
+								SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser, null);
 								HashMap userAttributes = userProfile.getAttributes();
 								
 								if (userAttributes.get("email") != null){
@@ -182,7 +177,7 @@ public class DatasetNotificationEvent extends AbstractEvent {
 											if (measureDataset.getLabel().equals(measureLabel)){
 												String documentCreationUser = sbiDocument.getCreationUser();
 												ISecurityServiceSupplier supplier = SecurityServiceSupplierFactory.createISecurityServiceSupplier();
-												SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser);
+												SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser, null);
 												HashMap userAttributes = userProfile.getAttributes();
 		
 												if (userAttributes.get("email") != null){

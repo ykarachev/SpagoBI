@@ -138,7 +138,7 @@ public class DocumentCRUD extends AbstractSpagoBIResource {
 				documentCreationUser = document.getCreationUser();
 
 				ISecurityServiceSupplier supplier = SecurityServiceSupplierFactory.createISecurityServiceSupplier();
-				SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser);
+				SpagoBIUserProfile userProfile = supplier.createUserProfile(documentCreationUser, null);
 				HashMap userAttributes = userProfile.getAttributes();
 				if (userAttributes.get("email") != null) {
 					emailAddressdocumentCreationUser = (String) userAttributes.get("email");
