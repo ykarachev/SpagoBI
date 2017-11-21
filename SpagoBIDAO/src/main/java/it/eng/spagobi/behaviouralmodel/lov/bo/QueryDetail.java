@@ -923,10 +923,11 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 	 *            The user profile
 	 * @param biparam
 	 *            The BIObjectParameter with the values that must be validated
-	 * @return a list of errors: it is empty if all values are admissible, otherwise it will contain a EMFUserError for each wrong value
+	 * @param dependencies
+	 *@param biObjectParameters @return a list of errors: it is empty if all values are admissible, otherwise it will contain a EMFUserError for each wrong value
 	 * @throws Exception
 	 */
-	public List validateValues(IEngUserProfile profile, BIObjectParameter biparam) throws Exception {
+	public List validateValues(IEngUserProfile profile, BIObjectParameter biparam, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
 		List toReturn = new ArrayList();
 		List<String> values = biparam.getParameterValues();
 		List parameterValuesDescription = new ArrayList();
@@ -936,7 +937,7 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 		String statement = null;
 		SourceBean result = null;
 		try {
-			statement = getValidationQuery(profile, biparam, values);
+			statement = getValidationQuery(profile, biparam, values, dependencies, biObjectParameters);
 			logger.debug("Executing validation statement [" + statement + "] ...");
 			// gets connection
 			Connection conn = getConnection(profile, dataSource);
@@ -996,8 +997,12 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 	/**
 	 * This methods builds the validation query, see validateValues method.
 	 */
-	private String getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values) throws Exception {
+	private String getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
 		String statement = getQueryDefinition();
+		if (hasInlineParametersDirective(statement)) {
+			statement = inlineParametersStrategy(statement, biObjectParameters, profile);
+		}
+
 		statement = StringUtilities.substituteProfileAttributesInString(statement, profile);
 		StringBuffer buffer = new StringBuffer();
 

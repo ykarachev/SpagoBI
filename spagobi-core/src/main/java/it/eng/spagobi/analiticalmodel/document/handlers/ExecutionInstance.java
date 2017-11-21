@@ -895,7 +895,7 @@ public class ExecutionInstance implements Serializable {
 		String lovResult = executionCacheManager.getLovResult(this.userProfile, this.getLovDetail(biparam), this.getDependencies(biparam), this, false);
 		if (lovResult == null) {
 			// lov is not in cache: we must validate values
-			toReturn = queryDetail.validateValues(this.userProfile, biparam);
+			toReturn = queryDetail.validateValues(this.userProfile, biparam, this.getDependencies(biparam), this.getBIObject().getBiObjectParameters());
 		} else {
 			toReturn = getValidationErrorsOnValuesByLovResult(lovResult, biparam, queryDetail);
 			if (toReturn.isEmpty()) {
@@ -904,7 +904,7 @@ public class ExecutionInstance implements Serializable {
 				// if there are dependencies, we should not consider them since they are not mandatory
 				List<ObjParuse> dependencies = this.getDependencies(biparam);
 				if (!dependencies.isEmpty()) {
-					toReturn = queryDetail.validateValues(this.userProfile, biparam);
+					toReturn = queryDetail.validateValues(this.userProfile, biparam, this.getDependencies(biparam), this.getBIObject().getBiObjectParameters());
 				}
 			}
 		}
