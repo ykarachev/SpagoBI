@@ -161,9 +161,11 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 			HashMap<String, String> attributes = new HashMap<String, String>();
 			attributes.put("userUniqueIdentifier", userUniqueIdentifier);
 			attributes.put("userId", userId);
-			attributes.put("userName", userName);
+			attributes.put("username", userName);
 			attributes.put("email", email);
 			profile.setAttributes(attributes);
+
+			logger.debug("Profile attributes " + attributes.toString());
 
 			return profile;
 		} catch (Exception e) {
