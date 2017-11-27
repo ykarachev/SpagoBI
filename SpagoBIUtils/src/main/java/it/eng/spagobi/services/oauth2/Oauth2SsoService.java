@@ -5,8 +5,6 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package it.eng.spagobi.services.oauth2;
 
-import it.eng.spago.error.EMFInternalError;
-import it.eng.spago.security.IEngUserProfile;
 import it.eng.spagobi.commons.SingletonConfig;
 import it.eng.spagobi.commons.utilities.SpagoBIUtilities;
 import it.eng.spagobi.security.DefaultCipher;
@@ -14,16 +12,13 @@ import it.eng.spagobi.services.common.AbstractSsoServiceInterface;
 import it.eng.spagobi.services.common.SsoServiceInterface;
 import it.eng.spagobi.services.security.exceptions.SecurityException;
 import it.eng.spagobi.utilities.exceptions.SpagoBIDefaultCipherException;
-
-import java.io.IOException;
-import java.math.BigInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.portlet.PortletSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
 
 public class Oauth2SsoService extends AbstractSsoServiceInterface implements SsoServiceInterface {
 
@@ -33,19 +28,19 @@ public class Oauth2SsoService extends AbstractSsoServiceInterface implements Sso
 	
 	@Override
 	public void validateTicket(String ticket, String userId) throws SecurityException {
-		logger.debug("Start ticket validation");
-		initCipher();
-		if (df == null){
-			logger.error("Fail ticket validation");
-			throw new SpagoBIDefaultCipherException("Fail initialization Default Cipher");
-		}
-		String decryptedUserID = df.decrypt(ticket);
-		if (!decryptedUserID.equals(userId)){
-			logger.error("Ticket is not valid");
-			throw new SecurityException("Fail ticket validation");
-		}
-		
-		logger.debug("End ticket validation");
+//		logger.debug("Start ticket validation");
+//		initCipher();
+//		if (df == null){
+//			logger.error("Fail ticket validation");
+//			throw new SpagoBIDefaultCipherException("Fail initialization Default Cipher");
+//		}
+//		String decryptedUserID = df.decrypt(ticket);
+//		if (!decryptedUserID.equals(userId)){
+//			logger.error("Ticket is not valid");
+//			throw new SecurityException("Fail ticket validation");
+//		}
+//
+//		logger.debug("End ticket validation");
 	} 
 	 
 	public String readTicket(HttpSession session) throws IOException {
