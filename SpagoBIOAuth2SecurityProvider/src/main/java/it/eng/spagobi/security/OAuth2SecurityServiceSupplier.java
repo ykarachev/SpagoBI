@@ -158,11 +158,26 @@ public class OAuth2SecurityServiceSupplier implements ISecurityServiceSupplier {
 			String[] rolesString = new String[roles.size()];
 			profile.setRoles(roles.toArray(rolesString));
 
+			final String roleKey = config.getProperty("USER_INFO_ROLE_KEY", "role");
+			logger.debug("User role key is [" + roleKey + "]");
+
+			String role = null;
+			try {
+				role = jsonObject.getString(roleKey);
+				logger.debug("User name is [" + userName + "]");
+			} catch (Exception e) {
+				logger.debug("Attribute " + roleKey + " not found in JSON response");
+			}
+
+
 			HashMap<String, String> attributes = new HashMap<String, String>();
 			attributes.put("userUniqueIdentifier", userUniqueIdentifier);
 			attributes.put("userId", userId);
 			attributes.put("username", userName);
 			attributes.put("email", email);
+			if (role != null) {
+				attributes.put("role", role);
+			}
 			profile.setAttributes(attributes);
 
 			logger.debug("Profile attributes " + attributes.toString());
