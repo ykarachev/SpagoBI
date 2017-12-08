@@ -173,6 +173,9 @@ public class StringUtilities {
 
 		replacement = prefix + newListOfValues + suffix;
 		attribute = quote(attribute);
+		if (replacement.contains("$")) {
+			replacement = replacement.replace("$", "\\$");
+		}
 		statement = statement.replaceAll("\\$\\{" + attribute + "\\}", replacement);
 
 		parametersStartIndex = statement.indexOf(START_USER_PROFILE_ATTRIBUTE, profileAttributeEndIndex);
