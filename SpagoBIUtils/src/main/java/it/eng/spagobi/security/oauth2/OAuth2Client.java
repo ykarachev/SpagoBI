@@ -169,7 +169,10 @@ public class OAuth2Client {
 			httppost.setParameter("username", username);
 			httppost.setParameter("password", password);
 			httppost.setParameter("client_id", config.getProperty("CLIENT_ID"));
-
+			final String scopeProperty = config.getProperty("SCOPE");
+			if (scopeProperty != null) {
+				httppost.setParameter("scope", scopeProperty);
+			}
 			return sendHttpPost(httppost);
 		} catch (Exception e) {
 			throw new SpagoBIRuntimeException("Error while trying to get access token from OAuth2 provider", e);
