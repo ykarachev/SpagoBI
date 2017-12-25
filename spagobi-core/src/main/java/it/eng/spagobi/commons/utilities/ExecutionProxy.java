@@ -328,6 +328,7 @@ public class ExecutionProxy {
 					parvalue = mapPars.get(parurlname).toString();
 				httppost.addParameter(parurlname, parvalue);
 			}
+			httppost.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
 			// sent request to the engine
 			int statusCode = client.executeMethod(httppost);
 			logger.debug("statusCode=" + statusCode);
