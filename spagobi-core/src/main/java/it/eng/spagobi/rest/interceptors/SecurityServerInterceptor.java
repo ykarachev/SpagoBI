@@ -55,7 +55,7 @@ public class SecurityServerInterceptor implements PreProcessInterceptor, Accepte
 
 	@Context
 	private HttpServletRequest servletRequest;
-
+	
 	/**
 	 * Preprocess all the REST requests.
 	 *
@@ -310,8 +310,8 @@ public class SecurityServerInterceptor implements PreProcessInterceptor, Accepte
 	}
 
 	public boolean accept(Class declaring, Method method) {
-		return !method.isAnnotationPresent(POST.class);
-		// return true;
+//		return !method.isAnnotationPresent(POST.class);
+		 return true;
 	}
 
 }
