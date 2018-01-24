@@ -748,6 +748,7 @@ Ext.extend(Sbi.execution.ParametersPanel, Ext.FormPanel, {
 				if( this.parameterHasDependencies( parameters[i] ) || parameters[i].type === 'DATE') {
 					this.addField(field, nonTransientField++);
 				} else {
+                    this.addField(field, nonTransientField++);
 					field.isTransient = true;
 					field.setValue(parameters[i].value);
 				}
