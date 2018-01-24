@@ -11,13 +11,6 @@ import it.eng.spagobi.commons.utilities.JTidyHTMLHandler;
 import it.eng.spagobi.tenant.TenantManager;
 import it.eng.spagobi.tools.objmetadata.bo.ObjMetacontent;
 import it.eng.spagobi.tools.objmetadata.bo.ObjMetadata;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -39,6 +32,12 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.util.Version;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
 public class LuceneSearcher {
 
 	static private Logger logger = Logger.getLogger(LuceneSearcher.class);
@@ -49,6 +48,7 @@ public class LuceneSearcher {
 	public static HashMap<String, Object> searchIndex(IndexSearcher searcher, String queryString, String index, String[] fields, String metaDataToSearch)
 			throws IOException, ParseException {
 		logger.debug("IN");
+		queryString = queryString + "*";
 		HashMap<String, Object> objectsToReturn = new HashMap<String, Object>();
 
 		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
