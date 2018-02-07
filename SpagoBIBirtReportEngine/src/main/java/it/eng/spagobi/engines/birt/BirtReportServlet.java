@@ -873,7 +873,9 @@ public class BirtReportServlet extends HttpServlet {
 			if (resultSetList.size() <= 1) {
 
 				// output directly on the response OutputStream
-				responseOut.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+				if ("UTF-8".equalsIgnoreCase(extractionOptions.getEncoding())) {
+					responseOut.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+				}
 				extractionOptions.setOutputStream(responseOut);
 
 				// Set the HTTP response
@@ -929,7 +931,9 @@ public class BirtReportServlet extends HttpServlet {
 						tempIn = new ByteArrayInputStream(((ByteArrayOutputStream) tempOut).toByteArray());
 
 						// Transfer bytes from the temp buffer to the ZIP file
-						outZip.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+						if ("UTF-8".equalsIgnoreCase(extractionOptions.getEncoding())) {
+							outZip.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+						}
 						int len;
 						while ((len = tempIn.read(buf)) > 0) {
 							outZip.write(buf, 0, len);
