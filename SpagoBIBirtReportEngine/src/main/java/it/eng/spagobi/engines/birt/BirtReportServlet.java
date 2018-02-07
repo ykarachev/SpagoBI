@@ -28,36 +28,6 @@ import it.eng.spagobi.utilities.ParametersDecoder;
 import it.eng.spagobi.utilities.SpagoBIAccessUtils;
 import it.eng.spagobi.utilities.assertion.Assert;
 import it.eng.spagobi.utilities.callbacks.audit.AuditAccessUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import org.apache.log4j.Logger;
 import org.eclipse.birt.report.IBirtConstants;
 import org.eclipse.birt.report.engine.api.EXCELRenderOption;
@@ -82,8 +52,35 @@ import org.eclipse.birt.report.utility.DataExtractionParameterUtil;
 import org.safehaus.uuid.UUID;
 import org.safehaus.uuid.UUIDGenerator;
 import org.xml.sax.InputSource;
-
 import sun.misc.BASE64Decoder;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author Zerbetto (davide.zerbetto@eng.it)
@@ -876,6 +873,7 @@ public class BirtReportServlet extends HttpServlet {
 			if (resultSetList.size() <= 1) {
 
 				// output directly on the response OutputStream
+				responseOut.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 				extractionOptions.setOutputStream(responseOut);
 
 				// Set the HTTP response
@@ -931,6 +929,7 @@ public class BirtReportServlet extends HttpServlet {
 						tempIn = new ByteArrayInputStream(((ByteArrayOutputStream) tempOut).toByteArray());
 
 						// Transfer bytes from the temp buffer to the ZIP file
+						outZip.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 						int len;
 						while ((len = tempIn.read(buf)) > 0) {
 							outZip.write(buf, 0, len);

@@ -33,6 +33,6 @@
 	<!-- spudsoft XLSX emitter -->
 	<XLSX_EMITTER id="uk.co.spudsoft.birt.emitters.excel.XlsxEmitter" output_format="xlsx" />
 
- 	<!--  <CSV_EMITTER_ENCODING>UTF-8</CSV_EMITTER_ENCODING> -->
+	<CSV_EMITTER_ENCODING>UTF-8</CSV_EMITTER_ENCODING>
  
 </ENGINE-CONFIGURATION>
