@@ -958,76 +958,111 @@ public class ObjectsAccessVerifier {
 	}
 
 	/**
-	 * Checks if the document in input has profiled visibility constraints. If it is the case, checks if the user in input has suitable profile attributes.
-	 *
+	 * Checks if the document in input has profiled visibility constraints. If it is the case, checks if the user in input has
+	 * suitable profile attributes.
 	 * @param obj
 	 * @param profile
 	 * @return true if document profiled visibility constraints are satisfied by the user
 	 * @throws EMFInternalError
 	 */
 	public static boolean checkProfileVisibility(BIObject obj, IEngUserProfile profile) throws EMFInternalError {
-		Monitor monitor = MonitorFactory.start("spagobi.core.ObjectAccessVerifier.checkProfileVisibility");
+		Monitor monitor =MonitorFactory.start("spagobi.core.ObjectAccessVerifier.checkProfileVisibility");
 
-		logger.debug("IN: obj label is [" + obj.getLabel() + "]; user is [" + ((UserProfile) profile).getUserId().toString() + "]");
+		logger.warn("Patch ALTIC");
+
+		logger.warn("IN: obj label is [" + obj.getLabel() + "]; user is [" + ((UserProfile)profile).getUserId().toString() + "]");
 		boolean toReturn = true;
+		boolean toReturnFinal = false;
 		String profVisibility = obj.getProfiledVisibility();
+
+		logger.warn("Biobject with label [" + obj.getLabel() + "] has profile visibility contraints = [" + profVisibility + "]");
+
 		if (profVisibility == null || profVisibility.trim().equals("")) {
 			logger.debug("Biobject with label [" + obj.getLabel() + "] has no profile visibility contraints.");
 			monitor.stop();
 			return true;
 		}
-		logger.debug("Biobject with label [" + obj.getLabel() + "] has profile visibility contraints = [" + profVisibility + "]");
-		String[] constraints = profVisibility.split(" AND ");
+
+		String[] constraints = profVisibility.split(" OR ");
 		for (int i = 0; i < constraints.length; i++) {
-			String constraint = constraints[i];
+			String constraint = constraints[i].replace("(", "").replace(")", "");
 			logger.debug("Examining constraint [" + constraint + "] ...");
-			int index = constraint.indexOf("=");
-			if (index == -1) {
-				logger.error("Constraint [" + constraint + "] is not correct!! It should have the syntax PROFILE_ATTRIBUTE_NAME=VALUE. It will be ignored.");
-				continue;
-			}
-			String profileAttrName = constraint.substring(0, index).trim();
-			String value = constraint.substring(index + 1).trim();
-			if (!profile.getUserAttributeNames().contains(profileAttrName)) {
-				logger.debug("User profile hasn't the required profile attribute [" + profileAttrName + "], it does not satisfy constraint");
-				toReturn = false;
-				break;
-			}
-			Object profileAttr = profile.getUserAttribute(profileAttrName);
-			if (profileAttr == null) {
-				logger.debug("User profile attribute [" + profileAttrName + "] is null, it does not satisfy constraint");
-				toReturn = false;
-				break;
-			}
-			String profileAttrStr = profileAttr.toString();
-			if (profileAttrStr.startsWith("{")) {
-				// the profile attribute is multi-value
-				String[] values = null;
-				try {
-					values = GeneralUtilities.findAttributeValues(profileAttrStr);
-				} catch (Exception e) {
-					logger.error("Error while reading profile attribute", e);
-					logger.debug("User profile attribute [" + profileAttrName + "] does not satisfy constraint");
-					toReturn = false;
-					break;
+			String[] subconstraints = constraint.split(" AND ");
+			for (int j = 0; j < subconstraints.length; j++) {
+				String subconstraint = subconstraints[j];
+				logger.debug("Examining subconstraint [" + subconstraint + "] ...");
+				int index = subconstraint.indexOf("=");
+				if (index == -1) {
+					logger.debug("Constraint [" + subconstraint + "] is not correct!! It should have the syntax (ROLE = VALUE AND PROFILE_ATTRIBUTE_NAME=VALUE AND PROFILE_ATTRIBUTE_NAME _2=VALUE_2) OR (PROFILE_ATTRIBUTE_NAME_3=VALUE_3). It will be ignored.");
+					continue;
 				}
-				if (!Arrays.asList(values).contains(value)) {
-					logger.debug("User profile attribute [" + profileAttrName + "] does not contain [" + value + "] value, it does not satisfy constraint");
-					toReturn = false;
-					break;
+				String profileAttrName = subconstraint.substring(0, index).trim();
+				String value = subconstraint.substring(index + 1).trim();
+
+				logger.debug("profileAttrName : " + profileAttrName);
+				logger.debug("value : " + value);
+
+				if("role".equals(profileAttrName)) {
+					logger.debug("Constraint Role : " + profile.getRoles().contains(value));
+					if(!profile.getRoles().contains(value)) {
+						toReturn = false;
+						break;
+					}
+				} else {
+					if (!profile.getUserAttributeNames().contains(profileAttrName)) {
+						logger.debug("User profile hasn't the required profile attribute [" + profileAttrName + "], it does not satisfy constraint");
+						toReturn = false;
+						break;
+					}
+					Object profileAttr = profile.getUserAttribute(profileAttrName);
+					if (profileAttr == null) {
+						logger.debug("User profile attribute [" + profileAttrName + "] is null, it does not satisfy constraint");
+						toReturn = false;
+						break;
+					}
+					String profileAttrStr = profileAttr.toString();
+					if (profileAttrStr.startsWith("{")) {
+						// the profile attribute is multi-value
+						String[] values = null;
+						try {
+							values = GeneralUtilities.findAttributeValues(profileAttrStr);
+						} catch (Exception e) {
+							logger.error("Error while reading profile attribute", e);
+							logger.debug("User profile attribute [" + profileAttrName + "] does not satisfy constraint");
+							toReturn = false;
+							break;
+						}
+						if (!Arrays.asList(values).contains(value)) {
+							logger.debug("User profile attribute [" + profileAttrName + "] does not contain [" + value + "] value, it does not satisfy constraint");
+							toReturn = false;
+							break;
+						}
+					} else {
+						// the profile attribute is single-value
+						logger.debug("User values" + profileAttrStr);
+						if (!profileAttrStr.equals(value)) {
+							logger.debug("User profile attribute [" + profileAttrName + "] is not equal to [" + value + "], it does not satisfy constraint");
+							toReturn = false;
+							break;
+						}
+					}
 				}
-			} else {
-				// the profile attribute is single-value
-				if (!profileAttrStr.equals(value)) {
-					logger.debug("User profile attribute [" + profileAttrName + "] is not equal to [" + value + "], it does not satisfy constraint");
-					toReturn = false;
-					break;
-				}
+				logger.debug("subcontrainst ? " + toReturn);
+
 			}
+			logger.debug("toReturn ? " + toReturn);
+			if( toReturn) {
+				logger.debug("OUT.canSee=" + true);
+				monitor.stop();
+				return true;
+			}
+
+			toReturn = true;
 		}
-		logger.debug("OUT.canSee=" + toReturn);
+
+		logger.debug("OUT.canSee=" + false);
 		monitor.stop();
-		return toReturn;
+		return false;
 	}
 
 	/**
