@@ -965,6 +965,9 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 		while (it.hasNext()) {
 			String description = null;
 			String aValue = it.next();
+			if (aValue.indexOf(";") == -1) {
+				aValue = aValue + ";";
+			}
 			Object obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
 			if (obj == null) {
 				// value was not found!!
