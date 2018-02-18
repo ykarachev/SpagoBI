@@ -1042,7 +1042,16 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 				buffer.append(getSQLValue(biparam, values.get(0)));
 			} else {
 				buffer.append(getColumnSQLName(this.valueColumnName) + " IN (");
-				buffer.append(concatenateValues(biparam, values));
+				for (int i = 0; i < values.size(); i++) {
+					String sqlValue = getSQLValue(biparam, values.get(i));
+					buffer.append(sqlValue);
+					if (sqlValue.indexOf(';') == -1) {
+						buffer.append(";");
+					}
+					if (i < values.size() -1) {
+						buffer.append(",");
+					}
+				}
 				buffer.append(")");
 			}
 		}
