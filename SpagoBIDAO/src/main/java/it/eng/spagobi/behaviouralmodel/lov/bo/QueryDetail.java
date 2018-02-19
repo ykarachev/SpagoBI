@@ -37,6 +37,7 @@ import it.eng.spagobi.utilities.assertion.Assert;
 import it.eng.spagobi.utilities.exceptions.SpagoBIRuntimeException;
 import it.eng.spagobi.utilities.objects.Couple;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.log4j.Logger;
 
@@ -354,9 +355,25 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 
             final Domain domain = DAOFactory.getDomainDAO().loadDomainById(parameter.getTypeId());
             final String valueCd = domain.getValueCd();
-            if (!valueCd.equalsIgnoreCase("NUM")) {
-                value = "'" + value + "'";
-            }
+			if (biObjectParameter.isMultivalue()) {
+				value = "";
+				List parameterValues = biObjectParameter.getParameterValues();
+				List<String> strValues = new ArrayList<>();
+				if (parameterValues != null) {
+					for (Object paramValue : parameterValues) {
+						if (!valueCd.equalsIgnoreCase("NUM")) {
+							paramValue = "'" + paramValue + "'";
+						}
+						strValues.add(paramValue.toString());
+					}
+				}
+				value = StringUtils.join(strValues.iterator(), ",");
+			} else {
+				if (!valueCd.equalsIgnoreCase("NUM")) {
+					value = "'" + value + "'";
+				}
+			}
+
             parametersMap.put(id, value);
         }
 
@@ -965,7 +982,7 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 		while (it.hasNext()) {
 			String description = null;
 			String aValue = it.next();
-			if (aValue.indexOf(";") == -1) {
+			if (biparam.isMultivalue() && aValue.indexOf(";") == -1) {
 				aValue = aValue + ";";
 			}
 			Object obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
