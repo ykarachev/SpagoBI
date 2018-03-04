@@ -1059,7 +1059,8 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 
 			if (values.size() == 1) {
 				buffer.append(getColumnSQLName(this.valueColumnName) + " = ");
-				String sqlValue = getSQLValue(biparam, values.get(0));
+				String value = StringUtils.stripEnd(values.get(0), ";");
+				String sqlValue = getSQLValue(biparam, value);
 				sqlValue = sqlValue.replace("'", "");
 				if (biparam.isMultivalue()) {
 					if (sqlValue.indexOf(';') == -1) {
@@ -1071,7 +1072,8 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 			} else {
 				buffer.append(getColumnSQLName(this.valueColumnName) + " IN (");
 				for (int i = 0; i < values.size(); i++) {
-					String sqlValue = getSQLValue(biparam, values.get(i));
+					String value = StringUtils.stripEnd(values.get(i), ";");
+					String sqlValue = getSQLValue(biparam, value);
 					if (sqlValue.indexOf(';') == -1) {
 						sqlValue = sqlValue.replace("'", "");
 						sqlValue = sqlValue + ";";
