@@ -982,10 +982,13 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 		while (it.hasNext()) {
 			String description = null;
 			String aValue = it.next();
-			if (biparam.isMultivalue() && aValue.indexOf(";") == -1) {
-				aValue = aValue + ";";
-			}
 			Object obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
+			if (obj == null) {
+				if (biparam.isMultivalue() && aValue.indexOf(";") == -1) {
+					aValue = aValue + ";";
+					obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
+				}
+			}
 			if (obj == null) {
 				// value was not found!!
 				logger.error("Parameter '" + biparam.getLabel() + "' cannot assume value '" + aValue + "'" + " for user '"
@@ -1017,7 +1020,10 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 	/**
 	 * This methods builds the validation query, see validateValues method.
 	 */
-	private String getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
+	private String
+
+
+	getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
 		String statement = getQueryDefinition();
 		if (hasInlineParametersDirective(statement)) {
 			statement = inlineParametersStrategy(statement, biObjectParameters, profile);
