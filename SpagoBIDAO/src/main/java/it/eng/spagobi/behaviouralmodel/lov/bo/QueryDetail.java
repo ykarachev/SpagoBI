@@ -984,12 +984,6 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 			String aValue = it.next();
 			Object obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
 			if (obj == null) {
-				if (biparam.isMultivalue() && aValue.indexOf(";") == -1) {
-					aValue = aValue + ";";
-					obj = result.getFilteredSourceBeanAttribute(DataRow.ROW_TAG, VALUE_ALIAS, aValue);
-				}
-			}
-			if (obj == null) {
 				// value was not found!!
 				logger.error("Parameter '" + biparam.getLabel() + "' cannot assume value '" + aValue + "'" + " for user '"
 						+ ((UserProfile) profile).getUserId().toString() + "'.");
@@ -1020,18 +1014,15 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 	/**
 	 * This methods builds the validation query, see validateValues method.
 	 */
-	private String
-
-
-	getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
+	private String getValidationQuery(IEngUserProfile profile, BIObjectParameter biparam, List<String> values, List<ObjParuse> dependencies, List<BIObjectParameter> biObjectParameters) throws Exception {
 		String statement = getQueryDefinition();
 		if (hasInlineParametersDirective(statement)) {
 			statement = inlineParametersStrategy(statement, biObjectParameters, profile);
 		}
 
 		statement = StringUtilities.substituteProfileAttributesInString(statement, profile);
-		StringBuffer buffer = new StringBuffer();
 
+		StringBuffer buffer = new StringBuffer();
 		if (this.lovType.equals("treeinner")) {
 			// for (int i = 0; i < this.treeLevelsColumns.size(); i++) {
 			// String levelColumn = this.treeLevelsColumns.get(i);
@@ -1061,37 +1052,7 @@ public class QueryDetail extends AbstractLOV implements ILovDetail {
 			buffer.append(getColumnSQLName(this.descriptionColumnName) + " AS \"" + DESCRIPTION_ALIAS + "\" ");
 			buffer.append("FROM (");
 			buffer.append(statement);
-			buffer.append(") " + getRandomAlias() + " WHERE ");
-
-			if (values.size() == 1) {
-				buffer.append(getColumnSQLName(this.valueColumnName) + " = ");
-				String value = StringUtils.stripEnd(values.get(0), ";");
-				String sqlValue = getSQLValue(biparam, value);
-				sqlValue = sqlValue.replace("'", "");
-				if (biparam.isMultivalue()) {
-					if (sqlValue.indexOf(';') == -1) {
-						sqlValue = sqlValue + ";";
-					}
-				}
-				sqlValue = "'" + sqlValue + "'";
-				buffer.append(sqlValue);
-			} else {
-				buffer.append(getColumnSQLName(this.valueColumnName) + " IN (");
-				for (int i = 0; i < values.size(); i++) {
-					String value = StringUtils.stripEnd(values.get(i), ";");
-					String sqlValue = getSQLValue(biparam, value);
-					if (sqlValue.indexOf(';') == -1) {
-						sqlValue = sqlValue.replace("'", "");
-						sqlValue = sqlValue + ";";
-						sqlValue = "'" + sqlValue + "'";
-					}
-					buffer.append(sqlValue);
-					if (i < values.size() -1) {
-						buffer.append(",");
-					}
-				}
-				buffer.append(")");
-			}
+			buffer.append(")");
 		}
 
 		return buffer.toString();
